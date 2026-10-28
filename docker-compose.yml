@@ -5,24 +5,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nextjs_secured_app
-    restart: always
-    expose:
-      - "3000"
-    environment:
-      - NODE_ENV=production
-    security_opt:
-      - no-new-privileges:true  # কন্টেইনারের ভেতর প্রিভিলেজ এসকেলেশন (Privilege Escalation) বন্ধ করে
-
-  nginx-proxy:
-    image: nginx:alpine
-    container_name: nginx_secured_proxy
+    container_name: nextjs_max_secured_app
     restart: always
     ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - nextjs-app
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
+    # --- হাই সিকিউরিটি ফ্ল্যাগসমূহ ---
     security_opt:
-      - no-new-privileges:true
+      - no-new-privileges:true  # সুডোকল বা প্রিভিলেজ এসকেলেশন সম্পূর্ণ ব্লক করে
+    read_only: true             # ফাইল সিস্টেম রিড-ওনলি করে দেয়, হ্যাকার ম্যালওয়্যার ফাইল রাইট করতে পারবে না
+    tmpfs:
+      - /tmp                    # Next.js বা অ্যাপের সাময়িক কাজের জন্য মেমোরিতে ছোট টেম্প ফোল্ডার
+      - /app/.next/cache        # ক্যাশ জেনারেট করার জন্য টেম্প পাথ
+    cap_drop:
+      - ALL                     # সব ধরনের লিনাক্স ক্যাপাবিলিটি ড্রপ (বর্জন) করা হলো
+    cap_add:
+      - NET_BIND_SERVICE        # শুধু নেটওয়ার্ক বাইন্ড করার অনুমতি রাখা হলো
+    mem_limit: 512m             # DDoS বা রিসোর্স এক্সহশন অ্যাটাক (RAM flooding) রোধ করতে মেমোরি লিমিট
+    cpus: '0.5'                 # সিপিইউ ব্যবহার সীমিত করা হলো
