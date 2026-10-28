@@ -2,15 +2,20 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: nextjs_app
+    container_name: my_next_app
     restart: always
+    env_file: .env
+    security_opt:
+      - no-new-privileges:true # 🛡️ প্রিভিলেজ এস্কেলেশন ব্লক করে
+    environment:
+      - NODE_ENV=production
 
   nginx:
     image: nginx:alpine
-    container_name: nginx_proxy
+    container_name: my_nginx
     restart: always
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
